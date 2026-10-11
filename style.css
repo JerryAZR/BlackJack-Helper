@@ -259,6 +259,21 @@ button:focus-visible, input:focus-visible {
 footer { text-align: center; margin-top: 8px; }
 footer a { color: var(--muted); }
 
+/* script errors surface here instead of dying silently in the console */
+.crash {
+  position: fixed;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 10;
+  background: #3a1412;
+  border: 1px solid var(--red);
+  color: #f3c1be;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
 @media (max-width: 400px) {
   .ranks button { font-size: 12px; padding: 8px 0 6px; }
   .action .ev { font-size: 20px; }

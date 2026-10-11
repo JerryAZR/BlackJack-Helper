@@ -101,6 +101,7 @@ function playerInfo() {
 }
 
 function roundOver() {
+  // bust, an explicit stand, or the one double card has been drawn
   return playerInfo().bust || state.stood || (state.doubling && !state.doublePending);
 }
 
@@ -449,11 +450,29 @@ function onDecksChange(e) {
   e.target.value = String(state.decks);
 }
 
+/**
+ * Click dispatch. One table drives both the delegation selector and the
+ * handlers, so a new data-* control cannot be wired on one side and
+ * forgotten on the other — a mismatch would silently dead-click.
+ */
+const CLICK_HANDLERS = [
+  ['data-add', el => addCard(el.dataset.add, Number(el.dataset.rank))],
+  ['data-remove', el => removeCard(el.dataset.remove, Number(el.dataset.idx))],
+  ['data-act', el => commitAction(el.dataset.act)],
+  ['data-new-round', () => newRound()],
+  ['data-new-shoe', () => newShoe()],
+  ['data-undo', () => undo()],
+  ['data-decks', el => setDecks(Number(el.dataset.decks))],
+  ['data-mode', el => setMode(el.dataset.mode)],
+  ['data-s17', el => setS17(el.dataset.s17 === 's17')],
+  ['data-peek', el => setPeek(el.dataset.peek === 'peek')],
+];
+
+const CLICK_SELECTOR =
+  `#settings-toggle,${CLICK_HANDLERS.map(([attr]) => `[${attr}]`).join(',')}`;
+
 function onClick(e) {
-  const el = e.target.closest(
-    '[data-add],[data-remove],[data-act],[data-new-round],[data-new-shoe],' +
-    '[data-undo],[data-decks],[data-mode],[data-s17],[data-peek],#settings-toggle'
-  );
+  const el = e.target.closest(CLICK_SELECTOR);
   if (!el || el.disabled) return;
 
   if (el.id === 'settings-toggle') {
@@ -461,21 +480,30 @@ function onClick(e) {
     renderSettings();
     return;
   }
-  if (el.dataset.add !== undefined) { addCard(el.dataset.add, Number(el.dataset.rank)); return; }
-  if (el.dataset.remove !== undefined) { removeCard(el.dataset.remove, Number(el.dataset.idx)); return; }
-  if (el.dataset.act) { commitAction(el.dataset.act); return; }
-  if ('newRound' in el.dataset) { newRound(); return; }
-  if ('newShoe' in el.dataset) { newShoe(); return; }
-  if ('undo' in el.dataset) { undo(); return; }
-  if (el.dataset.decks !== undefined) { setDecks(Number(el.dataset.decks)); return; }
-  if (el.dataset.mode) { setMode(el.dataset.mode); return; }
-  if (el.dataset.s17) { setS17(el.dataset.s17 === 's17'); return; }
-  if (el.dataset.peek) { setPeek(el.dataset.peek === 'peek'); return; }
+  for (const [attr, handle] of CLICK_HANDLERS) {
+    if (el.hasAttribute(attr)) {
+      handle(el);
+      return;
+    }
+  }
+}
+
+// The browser swallows exceptions thrown inside event listeners into the
+// console — to a user that reads as "clicking does nothing", which is
+// exactly how the first deployed version failed. Surface them instead.
+function showCrash(message) {
+  const el = $('#crash');
+  el.hidden = false;
+  el.textContent =
+    `Something broke: ${message}. Details are in the browser console — reloading usually helps.`;
 }
 
 export function init() {
   if (state) return;
   state = load();
+  window.addEventListener('error', e => showCrash(e.message));
+  window.addEventListener('unhandledrejection', e =>
+    showCrash(String(e.reason?.message ?? e.reason)));
   document.addEventListener('click', onClick);
   $('#decks').addEventListener('change', onDecksChange);
   render();

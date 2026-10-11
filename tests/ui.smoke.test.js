@@ -20,6 +20,7 @@ test('UI wiring: entering cards, acting on advice, and resetting all work', asyn
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const dom = new JSDOM(html, { url: 'https://jerryazr.github.io/BlackJack-Helper/' });
   const { window } = dom;
+  globalThis.window = window;
   globalThis.document = window.document;
   globalThis.localStorage = window.localStorage;
   // jsdom does not execute module scripts; we drive init() ourselves instead
@@ -85,9 +86,27 @@ test('UI wiring: entering cards, acting on advice, and resetting all work', asyn
   click(q('[data-mode="running"]'));
   assert.match(q('#shoe').textContent, /running shoe/);
 
+  // running shoe: logging seen cards removes them from the readout,
+  // chip removal restores them, and a new shoe resets the whole thing
+  const rankCount = r => Number(qa('#shoe .slot .count')[r].textContent);
+  click(q('[data-add="extra"][data-rank="9"]'));
+  click(q('[data-add="extra"][data-rank="0"]'));
+  assert.equal(rankCount(9), 16 * 6 - 1, 'logged ten leaves the shoe');
+  assert.equal(rankCount(0), 4 * 6 - 1, 'logged ace leaves the shoe');
+  click(q('[data-remove="extra"][data-idx="0"]'));
+  assert.equal(rankCount(9), 16 * 6, 'chip removal restores the ten');
+  click(q('[data-new-shoe]'));
+  assert.equal(rankCount(0), 4 * 6, 'new shoe resets the running count');
+
   // blackjack detection: A + 10
   click(q('[data-add="upcard"][data-rank="5"]'));
   click(q('[data-add="hand"][data-rank="0"]'));
   click(q('[data-add="hand"][data-rank="9"]'));
   assert.match(q('#advice').textContent, /Blackjack/);
+
+  // script errors surface visibly instead of dying silently in the console
+  window.dispatchEvent(new window.ErrorEvent('error', { message: 'boom' }));
+  const crash = q('#crash');
+  assert.equal(crash.hidden, false, 'crash banner becomes visible');
+  assert.match(crash.textContent, /boom/);
 });

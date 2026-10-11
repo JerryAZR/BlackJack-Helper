@@ -31,7 +31,7 @@
 export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 
 /** Hard value of each rank. Aces count 1 here; soft promotion is derived. */
-export const RANK_VALUE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const RANK_VALUE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 const TEN = 9; // index of the 10/J/Q/K bucket
 const ACE = 0;
