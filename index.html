@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blackjack Helper — exact hit / stand / double advice</title>
+  <meta name="description" content="Composition-dependent expected values for blackjack decisions: hit, stand, or double. Exact math, no simulations.">
+  <meta name="theme-color" content="#0c1410">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='0.9em'%20font-size='90'%3E%E2%99%A0%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main>
+    <header class="top">
+      <h1>♠ Blackjack Helper</h1>
+      <button id="settings-toggle" class="ghost" aria-expanded="false" aria-controls="settings">⚙ Rules</button>
+    </header>
+
+    <section id="settings" class="panel settings" hidden>
+      <div class="field">
+        <label class="label" for="decks">Decks in shoe</label>
+        <div class="decks-row">
+          <input id="decks" type="number" inputmode="numeric" min="1" max="16" step="1" value="1" aria-label="Number of decks">
+          <div class="quick" role="group" aria-label="Quick deck counts">
+            <button data-decks="1">1</button>
+            <button data-decks="2">2</button>
+            <button data-decks="6">6</button>
+            <button data-decks="8">8</button>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <span class="label">Shoe mode</span>
+        <div class="seg" role="group" aria-label="Shoe mode">
+          <button data-mode="fresh">Fresh each round</button>
+          <button data-mode="running">Running shoe</button>
+        </div>
+        <p class="small muted" id="mode-note"></p>
+      </div>
+      <div class="field">
+        <span class="label">Dealer soft 17</span>
+        <div class="seg" role="group" aria-label="Dealer soft 17 rule">
+          <button data-s17="s17">Stands (S17)</button>
+          <button data-s17="h17">Hits (H17)</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="label">Dealer blackjack</span>
+        <div class="seg" role="group" aria-label="Dealer hole card rule">
+          <button data-peek="peek">Peeks (US)</button>
+          <button data-peek="nopeek">No peek (ENHC)</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="shoe" class="panel" aria-label="Shoe composition"></section>
+
+    <section id="inputs" class="panel" aria-label="Card entry">
+      <div class="input-group">
+        <div class="input-head"><h2>Dealer upcard</h2><span class="muted small">one card</span></div>
+        <div id="upcard-chips" class="chips"></div>
+        <div id="upcard-ranks"></div>
+      </div>
+      <div class="input-group">
+        <div class="input-head"><h2>Your hand</h2><span class="muted small">two cards, then drawn cards</span></div>
+        <div id="hand-chips" class="chips"></div>
+        <div id="hand-ranks"></div>
+      </div>
+      <div class="hint-row"><span id="hint" class="hint" aria-live="polite"></span></div>
+      <div id="flow" class="flow"></div>
+      <p class="small muted">Ranks only — J, Q and K count as 10. Nothing else about suit or identity matters.</p>
+    </section>
+
+    <section id="advice" aria-label="Advice" aria-live="polite"></section>
+
+    <footer>
+      <p class="small muted">
+        Exact composition-dependent EVs — computed from the cards you can see, no simulations,
+        no strategy table. Actions: hit · stand · double (any two cards). No split, surrender or insurance.
+        EV is per unit of your initial bet.
+      </p>
+      <p class="small muted"><a href="https://github.com/JerryAZR/BlackJack-Helper" rel="noopener">Source &amp; how the math works</a></p>
+    </footer>
+  </main>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "blackjack-helper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Exact composition-dependent blackjack decision helper (hit / stand / double).",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
