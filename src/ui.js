@@ -12,6 +12,10 @@ import { RANKS, fullShoe, handInfo, countsOf, evaluate, EngineError } from './en
 const LS_KEY = 'bjh:v1';
 const MAX_HISTORY = 100;
 
+// State is JSON-safe by construction (it round-trips through localStorage),
+// so a JSON clone is exact — and works in every browser unlike structuredClone.
+const clone = s => JSON.parse(JSON.stringify(s));
+
 const defaultState = () => ({
   decks: 1,
   mode: 'fresh',      // 'fresh' = new shoe every round | 'running' = cards carry over
@@ -41,9 +45,14 @@ function load() {
   try {
     const saved = JSON.parse(localStorage.getItem(LS_KEY));
     if (!saved) return fresh;
-    for (const key of ['decks', 'mode', 's17', 'peek']) {
-      if (key in saved) fresh[key] = saved[key];
+    // validate everything: corrupted storage must degrade to defaults, never
+    // poison the app (a bad decks value would throw inside every render)
+    if (Number.isInteger(saved.decks) && saved.decks >= 1 && saved.decks <= 16) {
+      fresh.decks = saved.decks;
     }
+    if (saved.mode === 'fresh' || saved.mode === 'running') fresh.mode = saved.mode;
+    if (typeof saved.s17 === 'boolean') fresh.s17 = saved.s17;
+    if (typeof saved.peek === 'boolean') fresh.peek = saved.peek;
     if (fresh.mode === 'running' && Array.isArray(saved.shoeOut)) {
       fresh.shoeOut = saved.shoeOut.filter(r => Number.isInteger(r) && r >= 0 && r <= 9);
     }
@@ -74,9 +83,9 @@ function persist() {
 /* ------------------------------------------------------------------ */
 
 function snapshot(fn) {
-  history.push(structuredClone(state));
+  history.push(clone(state));
   if (history.length > MAX_HISTORY) history.shift();
-  fn();
+  fn(state);
   render();
 }
 
@@ -245,6 +254,7 @@ function renderShoe() {
       <span class="muted small">${modeLine}</span>
     </div>
     ${bad ? '<p class="small error">More cards logged than the shoe contains — undo or reset.</p>' : ''}
+    <p class="small muted" style="margin:0 0 6px">Cards remaining (readout — enter cards below)</p>
     <div class="shoe-grid">${RANKS.map((r, i) =>
       `<div class="slot${rem[i] < 0 ? ' bad' : rem[i] === 0 ? ' empty' : ''}">` +
       `<span class="rank">${r}</span><span class="count">${rem[i]}</span></div>`).join('')}

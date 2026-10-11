@@ -62,8 +62,14 @@ and the EVs are composition-dependent rather than chart-averaged.
 ## Development
 
 ```
-npm test        # node:test — engine validated four independent ways
+npm install     # dev-only dependency: jsdom, for the DOM-level smoke test
+npm test        # node:test — engine + UI wiring
 ```
+
+The DOM smoke test loads the real `index.html`, drives the real `ui.js`, and
+simulates the full click flow (card entry, acting on advice, undo, round
+reset, settings). It skips with a notice when jsdom is not installed; the
+engine tests run with zero dependencies.
 
 The test suite checks the engine against:
 
